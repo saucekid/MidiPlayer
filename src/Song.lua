@@ -6,6 +6,7 @@
 
 local Song = {}
 Song.__index = Song
+Song.Speed = 2
 
 local MIDI = require(script.Parent.MIDI)
 local Input = require(script.Parent.Input)
@@ -72,9 +73,9 @@ end
 function Song:Step(deltaTime)
     self._lastTimePosition = self.TimePosition
     if (self._usPerBeat ~= 0) then
-        self.TimePosition += (deltaTime / (self._usPerBeat / 1000000))
+        self.TimePosition += (deltaTime / (self._usPerBeat / 1000000))  * self.Speed
     else
-        self.TimePosition += deltaTime
+        self.TimePosition += deltaTime * self.Speed
     end
 end
 
