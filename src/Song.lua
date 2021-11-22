@@ -6,7 +6,7 @@
 
 local Song = {}
 Song.__index = Song
-Song.Speed = 2
+Song.Speed = 3
 
 local MIDI = require(script.Parent.MIDI)
 local Input = require(script.Parent.Input)
