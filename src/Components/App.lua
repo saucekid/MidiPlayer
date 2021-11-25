@@ -26,6 +26,7 @@ end
 function App:Init()
 
     FastDraggable(gui.Frame, gui.Frame.Handle)
+    if syn then syn.protect_gui(gui) end
     gui.Parent = CoreGui
 
     Controller:Init(gui.Frame)

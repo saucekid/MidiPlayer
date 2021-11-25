@@ -6,13 +6,16 @@
 
 local Song = {}
 Song.__index = Song
-Song.Speed = 3
+Song.Speed = 1
+Song.MissPercent = 0
 
 local MIDI = require(script.Parent.MIDI)
 local Input = require(script.Parent.Input)
 
 local RunService = game:GetService("RunService")
 
+getgenv().rightNotePitches = {}
+getgenv().leftNotePitches = {}
 
 local function GetTimeLength(score)
     local length = 0
@@ -23,6 +26,13 @@ local function GetTimeLength(score)
     return length
 end
 
+local function chance(x) 
+    if math.random(1,100) <= x then 
+        return true
+    else 
+        return false
+    end  
+end  
 
 function Song.new(file)
 
@@ -58,7 +68,18 @@ end
 
 function Song:Update(timePosition, lastTimePosition)
     for _,track in next, self._score, 1 do
+        local pos = (_ % 4) 
         for _,event in ipairs(track) do
+            if (event[1] == "note") then
+                local pitch = event[5]
+                if pos == 2 then
+                    getgenv().rightNotePitches = {}
+                    getgenv().rightNotePitches[pitch] = true
+                elseif pos == 3 then
+                    getgenv().leftNotePitches = {}
+                    getgenv().leftNotePitches[pitch] = true
+                end
+            end
             local eventTime = (event[2] / self.Timebase)
             if (timePosition >= eventTime) then
                 if (lastTimePosition <= eventTime) then
@@ -143,7 +164,17 @@ function Song:_parse(event)
         self.TimePosition = (event[3] / self.Timebase)
         print("set timeposition timebase", self.Timebase)
     elseif (eventName == "note") then
-        Input.Hold(event[5], event[3] / self.Timebase)
+        if self.MissPercent > 0 then
+            task.spawn(function()
+                local random1 = chance(self.MissPercent)
+                local random2 = chance(self.MissPercent)
+                local random3 = chance(self.MissPercent)
+                if random1 then wait(math.random(0.1, 0.5)) end
+                if not random3 then Input.Hold(not random2 and event[5] or event[5] - 1, event[3] / self.Timebase) end
+            end)
+        else
+            Input.Hold(event[5], event[3] / self.Timebase)
+        end
     end
 end
 

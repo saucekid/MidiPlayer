@@ -5,6 +5,7 @@
 
 
 local midiPlayer = script:FindFirstAncestor("MidiPlayer")
+local FastTween = require(midiPlayer.FastTween)
 local Input = require(midiPlayer.Input)
 
 local Preview = {}
@@ -20,9 +21,8 @@ local colors = {
 }
 
 local c3White = Color3.new(1, 1, 1)
-
-local preview, notes, noteTemplate
-
+local rightNotes = {}
+local leftNotes = {}
 
 function Preview:Draw(song)
     notes:ClearAllChildren()
@@ -30,8 +30,10 @@ function Preview:Draw(song)
     notes.Parent = nil
 
     for i, track in next, song._score, 1 do
-        local color = colors[(i % #colors) + 1]
-
+        local pos = (i % #colors) + 1
+        local color = colors[pos]
+        print(pos)
+        
         for _,event in ipairs(track) do
             if (event[1] == "note") then
                 local pitch = event[5]
@@ -41,6 +43,7 @@ function Preview:Draw(song)
                 else
                     note.BackgroundColor3 = color
                 end
+                table.insert(pos == 3 and rightNotes or leftNotes, note)
                 note.Position = UDim2.new((pitch - 36) / 61, 0, 0, -event[2] / 2)
                 note.Size = UDim2.new(0.016, 0, 0, math.max(event[3] / 2, 1))
                 note.Parent = notes
@@ -53,9 +56,24 @@ function Preview:Draw(song)
     end
 end
 
+function Preview:hideHand(hand)
+    local handTable = hand:lower() == "left" and leftNotes or rightNotes
+    for _,note in pairs(handTable) do
+        note.Transparency = 0.5
+    end
+end
+
+function Preview:showHand(hand)
+    local handTable = hand:lower() == "left" and leftNotes or rightNotes
+    for _,note in pairs(handTable) do
+        note.Transparency = 0
+    end
+end
 
 function Preview:Clear()
     notes:ClearAllChildren()
+    genv.rightNotePitches = {}
+    genv.leftNotePitches = {}
 end
 
 

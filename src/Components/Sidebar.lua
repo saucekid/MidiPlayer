@@ -11,6 +11,8 @@ local FastTween = require(midiPlayer.FastTween)
 
 local Sidebar = {}
 
+local Elements = {}
+
 local tweenInfo = { 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out }
 
 local sidebar, template
@@ -29,6 +31,8 @@ function Sidebar:CreateElement(filePath)
     local element = template:Clone()
     element.Name = filePath
     element.Title.Text = name
+
+    Elements[name] = element
 
     if (Controller.CurrentFile == filePath) then
         element.Selection.Size = UDim2.fromOffset(3, 16)
@@ -59,7 +63,6 @@ function Sidebar:CreateElement(filePath)
 
     element.Parent = sidebar.Songs
     sidebar.Songs.CanvasSize = UDim2.new(0, 0, 0, #sidebar.Songs:GetChildren() * element.AbsoluteSize.Y)
-
 end
 
 
@@ -79,8 +82,26 @@ function Sidebar:Update()
         end
     end
 
+    self:Filter(sidebar.Search.Text)
 end
 
+function Sidebar:Filter(text)
+    if text ~= '' then
+        for a,v in next, Elements do
+            if not a:lower():find(text) then
+                v.Visible = false
+                v.Size = UDim2.new(1, 0, 0, 0)
+            else
+                v.Visible = true
+                v.Size = UDim2.new(1, 0,0, 32)
+            end
+        end
+    else
+        for a,v in next, Elements do
+            v.Size = UDim2.new(1, 0,0, 32)
+        end
+    end
+end
 
 function Sidebar:Init(frame)
 
@@ -88,6 +109,11 @@ function Sidebar:Init(frame)
 
     template = sidebar.Songs.Song
     template.Parent = nil
+
+    sidebar.Search:GetPropertyChangedSignal('Text'):Connect(function()
+        print(sidebar.Search.Text)
+        self:Update()
+    end)
 
     Controller.FileLoaded:Connect(function(song)
         for _,element in ipairs(sidebar.Songs:GetChildren()) do
@@ -103,7 +129,6 @@ function Sidebar:Init(frame)
 
     Thread.DelayRepeat(1, self.Update, self)
     self:Update()
-
 end
 
 
