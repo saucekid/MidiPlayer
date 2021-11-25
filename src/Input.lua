@@ -6,6 +6,7 @@
 
 local Input = {}
 
+local VirtualInputManager = game:GetService("VirtualInputManager")
 local keypress = getfenv(0).keypress
 local keyrelease = getfenv(0).keyrelease
 
@@ -20,6 +21,28 @@ local Maid = require(script.Parent.Util.Maid)
 
 local inputMaid = Maid.new()
 
+local Words ={
+    ["Zero"]="0",
+    ["One"]="1",
+    ["Two"]="2",
+    ["Three"]="3",
+    ["Four"]="4",
+    ["Five"]="5",
+    ["Six"]="6",
+    ["Seven"]="7",
+    ["Eight"]="8",
+    ["Nine"]="9",
+}
+
+local function CharacterToWord(char)
+    local wordfound
+    for word, v in pairs(Words) do
+        if v == char then
+            wordfound = word
+        end
+    end
+    return wordfound or char:upper()
+end
 
 local function GetKey(pitch)
     local idx = (pitch + 1 - 36)
@@ -44,11 +67,11 @@ function Input.Press(pitch)
     if (not key) then return end
     if (upperMapIdx) then
         local keyToPress = LOWER_MAP:sub(upperMapIdx, upperMapIdx)
-        keypress(VK_LSHIFT)
-        keypress(keyToPress:upper():byte())
-        keyrelease(VK_LSHIFT)
+        VirtualInputManager:SendKeyEvent(true,Enum.KeyCode.LeftShift,false,game)
+        VirtualInputManager:SendKeyEvent(true,CharacterToWord(keyToPress),false,game)
+        VirtualInputManager:SendKeyEvent(false,Enum.KeyCode.LeftShift,false,game)
     else
-        keypress(key:upper():byte())
+        VirtualInputManager:SendKeyEvent(true,CharacterToWord(key),false,game)
     end
 end
 
@@ -58,14 +81,18 @@ function Input.Release(pitch)
     if (not key) then return end
     if (upperMapIdx) then
         local keyToPress = LOWER_MAP:sub(upperMapIdx, upperMapIdx)
-        keyrelease(keyToPress:upper():byte())
+        VirtualInputManager:SendKeyEvent(false,CharacterToWord(keyToPress),false,game)
     else
-        keyrelease(key:upper():byte())
+        VirtualInputManager:SendKeyEvent(false,CharacterToWord(key),false,game)
     end
 end
 
 
 function Input.Hold(pitch, duration)
+    print(pitch)
+    print(LeftHand)
+    if getgenv().leftNotePitches[pitch] and not getgenv().LeftHand then return end
+    if getgenv().rightNotePitches[pitch] and not getgenv().RightHand then return end
     if (inputMaid[pitch]) then
         inputMaid[pitch] = nil
     end
